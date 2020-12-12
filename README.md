@@ -1,2 +1,18 @@
 # ImanPinjamBuku
-Apps untuk Pinjam buku
+Apps simple untuk Pinjam buku
+
+# Feature
+-> pinjam buku (disertai status jika sudah masuk masa tenggang hari juga status telat mengembalikan)
+
+-> feature lainnya seperti buku, kategori buku, anggota/member.
+
+
+# note :
+
+-> import dbnya (ada didalam file imanpinjambuku.sql) atau bisa kita migrate sendiri dengan cara (php artisan migrate)
+
+-> disini saya menggunakan bahasa pemograman php dengan framework laravel
+
+-> terakhir php artisan serve
+
+happy coding :)
