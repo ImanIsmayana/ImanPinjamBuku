@@ -15,6 +15,6 @@ Apps simple untuk Pinjam buku
 
 -> disini saya menggunakan bahasa pemograman php dengan framework laravel
 
--> terakhir php artisan serve
+-> terakhir tinggal jalankan servernya (php artisan serve)
 
 happy coding :)
