@@ -3,6 +3,22 @@
 @section('content')
     <script>
         $( document ).ready(function() {
+            // loading overlay
+            $("#loadingoverlay_borrowing").LoadingOverlay("show");
+            setTimeout(function(){
+                $("#loadingoverlay_borrowing").LoadingOverlay("hide");
+            }, 5000);
+
+            $("#loadingoverlay_borrower").LoadingOverlay("show");
+            setTimeout(function(){
+                $("#loadingoverlay_borrower").LoadingOverlay("hide");
+            }, 10000);
+
+            $("#loadingoverlay_latecharge").LoadingOverlay("show");
+            setTimeout(function(){
+                $("#loadingoverlay_latecharge").LoadingOverlay("hide");
+            }, 10000);
+            
             // create borrowing book
             $("#closenewborrowing").hide();
             $(".newborrowing").hide();
@@ -204,299 +220,303 @@
         </div>
     </div>
     <hr>
-    <table id="datatable_borrowing" class="table table-bordered table-responsive-lg">
-        <thead>
-            <tr>
-                <th>Member Name</th>
-                <th>Book Name</th>
-                <th>Borrow Date</th>
-                <th>Return Date</th>
-                <th>Action</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $i = 0;
-            @endphp
-            @foreach ($borrowings as $borrowing)
-                <script>
-                    // ajax get membername
-                    var b = "";
-                    var k = "";
-                    var r = "";
-
-                    function getmember() {
-                        $.ajax({
-                            url: "/borrowings/membername/"+{{ $borrowing->member_id }},
-                            dataType: "json",
-                            type: "GET",
-                            contentType: "application/json; charset=utf-8",
-                            success: function (data) {
-
-                                $.each(data,function(index,obj)
-                                {
-                                    b = obj.name;
-                                });
-
-                                document.getElementById("" +{{ $borrowing->member_id }}+{{ $i }}+"").innerHTML = "<td>"+ b +"</td>";
-
-                                return b;
-                            }
-                        });
-                    }
-
-                    function getbook() {
-                        $.ajax({
-                            url: "/borrowings/bookname/"+{{ $borrowing->book_id }},
-                            dataType: "json",
-                            type: "GET",
-                            contentType: "application/json; charset=utf-8",
-                            success: function (data) {
-
-                                $.each(data,function(index,obj)
-                                {
-                                    k = obj.title;
-                                });
-
-                                document.getElementById("" +{{ $borrowing->book_id }}+{{ $i }}+"").innerHTML = "<td>"+ k +"</td>";
-
-                                return k;
-                            }
-                        });
-                    }
-
-                    function returndate() {
-                        $.ajax({
-                            url: "/borrowings/returndate/"+{{ $borrowing->id }},
-                            dataType: "json",
-                            type: "GET",
-                            contentType: "application/json; charset=utf-8",
-                            success: function (data) {
-
-                                $.each(data,function(index,obj)
-                                {
-                                    r = obj.return_date;
-                                });
-
-                                console.log("tanggal: " +r);
-
-                                return r;
-                            }
-                        });
-                    }
-
-                    var borrowingidstatus = "";
-                    var borrowingidstatuslate = "";
-
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        }
-                    });
-
-                    function createNewBookStatus(borrowingidstatus) {
-                        $.ajax({
-                            async: false,
-                            url: "/borrowings/storeBorrowingStatus/"+borrowingidstatus,
-                            //data: "{ 'bookid': '" + JSON.stringify(book) + "' }",
-                            dataType: "json",
-                            type: "PUT",
-                            contentType: "application/json; charset=utf-8",
-                            dataFilter: function (data) { return data; },
-                            success: function (data) {
-
-                            },
-                            error: function (XMLHttpRequest, textStatus, errorThrown) {
-
-                            }
-                        });
-                    }
-
-                    function createNewBookStatusLate(borrowingidstatuslate) {
-                        $.ajax({
-                            async: false,
-                            url: "/borrowings/storeBorrowingStatusLate/"+borrowingidstatuslate,
-                            //data: "{ 'bookid': '" + JSON.stringify(book) + "' }",
-                            dataType: "json",
-                            type: "PUT",
-                            contentType: "application/json; charset=utf-8",
-                            dataFilter: function (data) { return data; },
-                            success: function (data) {
-
-                            },
-                            error: function (XMLHttpRequest, textStatus, errorThrown) {
-
-                            }
-                        });
-                    }
-
-                    getbook();
-                    getmember();
-                    returndate();
-
-                    $("#return").hide();
-
-                    function refreshPage(){
-                        window.location.reload();
-                    } 
-
-                    setTimeout(function(){
-                        var d = new Date();
-                        var month = d.getMonth()+1;
-                        var day = d.getDate();
-
-                        var output = d.getFullYear() + '-' +
-                            (month<10 ? '0' : '') + month + '-' +
-                            (day<10 ? '0' : '') + day;
-
-                        var returnNow = r.includes(output);
-
-                        if(returnNow == true){
-                            $("#return").show();
-                        }
-
-                    }, 8000);
-
-                    setTimeout(function(){
-                        var d = new Date();
-                        var month = d.getMonth()+1;
-                        var day = d.getDate();
-
-                        var output = d.getFullYear() + '-' +
-                            (month<10 ? '0' : '') + month + '-' +
-                            (day<10 ? '0' : '') + day;
-
-                        var returnNow = r.includes(output);
-
-                        if(returnNow == true){
-                            $("#return").hide();
-                        }
-
-                    }, 12000);
-
-                </script>
-                <tr id="iman">
-                    <td id="{{ $borrowing->member_id }}{{ $i }}"></td>
-                    <td id="{{ $borrowing->book_id }}{{ $i }}"></td>
-                    <td>{{ $borrowing->created_at_borrow }}</td>
-                    <td id="return_date">{{ $borrowing->return_date }}</td>
-                    <td>
-                        <form action="{{ route('borrowings.destroy',$borrowing->id) }}" method="Post">
-                            <a class="btn btn-primary" href="{{ route('borrowings.edit',$borrowing->id) }}">Edit</a>
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('are you sure to delete this?');">Delete</button>
-                        </form>
-                    </td>
-                    <td>
-                        <button type="submit" style="margin: 4px 4px 4px 4px" class="btn btn-warning" onclick="createNewBookStatusLate({{ $borrowing->id }}); refreshPage();">Late</button>
-                        <button type="submit" class="btn btn-success" id="statusdone" onclick="createNewBookStatus({{ $borrowing->id }}); refreshPage();">Done</button>
-                    </td>
+    <div id="loadingoverlay_borrowing">
+        <table id="datatable_borrowing" class="table table-bordered table-responsive-lg">
+            <thead>
+                <tr>
+                    <th>Member Name</th>
+                    <th>Book Name</th>
+                    <th>Borrow Date</th>
+                    <th>Return Date</th>
+                    <th>Action</th>
+                    <th>Status</th>
                 </tr>
+            </thead>
+            <tbody>
                 @php
-                    $i = $i+1;
+                    $i = 0;
                 @endphp
-            @endforeach
-            @php
-                $i++
-            @endphp
-        </tbody>
-    </table>
+                @foreach ($borrowings as $borrowing)
+                    <script>
+                        // ajax get membername
+                        var b = "";
+                        var k = "";
+                        var r = "";
+
+                        function getmember() {
+                            $.ajax({
+                                url: "/borrowings/membername/"+{{ $borrowing->member_id }},
+                                dataType: "json",
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                success: function (data) {
+
+                                    $.each(data,function(index,obj)
+                                    {
+                                        b = obj.name;
+                                    });
+
+                                    document.getElementById("" +{{ $borrowing->member_id }}+{{ $i }}+"").innerHTML = "<td>"+ b +"</td>";
+
+                                    return b;
+                                }
+                            });
+                        }
+
+                        function getbook() {
+                            $.ajax({
+                                url: "/borrowings/bookname/"+{{ $borrowing->book_id }},
+                                dataType: "json",
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                success: function (data) {
+
+                                    $.each(data,function(index,obj)
+                                    {
+                                        k = obj.title;
+                                    });
+
+                                    document.getElementById("" +{{ $borrowing->book_id }}+{{ $i }}+"").innerHTML = "<td>"+ k +"</td>";
+
+                                    return k;
+                                }
+                            });
+                        }
+
+                        function returndate() {
+                            $.ajax({
+                                url: "/borrowings/returndate/"+{{ $borrowing->id }},
+                                dataType: "json",
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                success: function (data) {
+
+                                    $.each(data,function(index,obj)
+                                    {
+                                        r = obj.return_date;
+                                    });
+
+                                    console.log("tanggal: " +r);
+
+                                    return r;
+                                }
+                            });
+                        }
+
+                        var borrowingidstatus = "";
+                        var borrowingidstatuslate = "";
+
+                        $.ajaxSetup({
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            }
+                        });
+
+                        function createNewBookStatus(borrowingidstatus) {
+                            $.ajax({
+                                async: false,
+                                url: "/borrowings/storeBorrowingStatus/"+borrowingidstatus,
+                                //data: "{ 'bookid': '" + JSON.stringify(book) + "' }",
+                                dataType: "json",
+                                type: "PUT",
+                                contentType: "application/json; charset=utf-8",
+                                dataFilter: function (data) { return data; },
+                                success: function (data) {
+
+                                },
+                                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                                }
+                            });
+                        }
+
+                        function createNewBookStatusLate(borrowingidstatuslate) {
+                            $.ajax({
+                                async: false,
+                                url: "/borrowings/storeBorrowingStatusLate/"+borrowingidstatuslate,
+                                //data: "{ 'bookid': '" + JSON.stringify(book) + "' }",
+                                dataType: "json",
+                                type: "PUT",
+                                contentType: "application/json; charset=utf-8",
+                                dataFilter: function (data) { return data; },
+                                success: function (data) {
+
+                                },
+                                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                                }
+                            });
+                        }
+
+                        getbook();
+                        getmember();
+                        returndate();
+
+                        $("#return").hide();
+
+                        function refreshPage(){
+                            window.location.reload();
+                        } 
+
+                        setTimeout(function(){
+                            var d = new Date();
+                            var month = d.getMonth()+1;
+                            var day = d.getDate();
+
+                            var output = d.getFullYear() + '-' +
+                                (month<10 ? '0' : '') + month + '-' +
+                                (day<10 ? '0' : '') + day;
+
+                            var returnNow = r.includes(output);
+
+                            if(returnNow == true){
+                                $("#return").show();
+                            }
+
+                        }, 8000);
+
+                        setTimeout(function(){
+                            var d = new Date();
+                            var month = d.getMonth()+1;
+                            var day = d.getDate();
+
+                            var output = d.getFullYear() + '-' +
+                                (month<10 ? '0' : '') + month + '-' +
+                                (day<10 ? '0' : '') + day;
+
+                            var returnNow = r.includes(output);
+
+                            if(returnNow == true){
+                                $("#return").hide();
+                            }
+
+                        }, 12000);
+
+                    </script>
+                    <tr id="iman">
+                        <td id="{{ $borrowing->member_id }}{{ $i }}"></td>
+                        <td id="{{ $borrowing->book_id }}{{ $i }}"></td>
+                        <td>{{ $borrowing->created_at_borrow }}</td>
+                        <td id="return_date">{{ $borrowing->return_date }}</td>
+                        <td>
+                            <form action="{{ route('borrowings.destroy',$borrowing->id) }}" method="Post">
+                                <a class="btn btn-primary" href="{{ route('borrowings.edit',$borrowing->id) }}">Edit</a>
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('are you sure to delete this?');">Delete</button>
+                            </form>
+                        </td>
+                        <td>
+                            <button type="submit" style="margin: 4px 4px 4px 4px" class="btn btn-warning" onclick="createNewBookStatusLate({{ $borrowing->id }}); refreshPage();">Late</button>
+                            <button type="submit" class="btn btn-success" id="statusdone" onclick="createNewBookStatus({{ $borrowing->id }}); refreshPage();">Done</button>
+                        </td>
+                    </tr>
+                    @php
+                        $i = $i+1;
+                    @endphp
+                @endforeach
+                @php
+                    $i++
+                @endphp
+            </tbody>
+        </table>
+    </div>
     <br>
     <br>
     <br>
     <hr>
     <h1>finished borrowing list</h1>
     <br>
-    <table id="datatable_borrower" class="table table-bordered table-responsive-lg">
-        <thead>
-            <tr>
-                <th>Member Name</th>
-                <th>Book Name</th>
-                <th>Borrow Date</th>
-                <th>Return Date</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $i = 0;
-            @endphp
-            @foreach ($allborrowers as $allborrower)
-                <script>
-                    // ajax get membername
-                    var b = "";
-                    var k = "";
-                    var r = "";
-
-                    function getmember() {
-                        $.ajax({
-                            url: "/borrowings/membername/"+{{ $allborrower->member_id }},
-                            dataType: "json",
-                            type: "GET",
-                            contentType: "application/json; charset=utf-8",
-                            success: function (data) {
-
-                                $.each(data,function(index,obj)
-                                {
-                                    b = obj.name;
-                                });
-
-                                document.getElementById("" +{{ $allborrower->member_id }}+{{ $i }}+"").innerHTML = "<td>"+ b +"</td>";
-
-                                return b;
-                            }
-                        });
-                    }
-
-                    function getbook() {
-                        $.ajax({
-                            url: "/borrowings/bookname/"+{{ $allborrower->book_id }},
-                            dataType: "json",
-                            type: "GET",
-                            contentType: "application/json; charset=utf-8",
-                            success: function (data) {
-
-                                $.each(data,function(index,obj)
-                                {
-                                    k = obj.title;
-                                });
-
-                                document.getElementById("" +{{ $allborrower->book_id }}+{{ $i }}+"").innerHTML = "<td>"+ k +"</td>";
-
-                                return k;
-                            }
-                        });
-                    }
-
-                    getbook();
-                    getmember();
-
-                </script>
-
-                <tr id="iman">
-                    <td id="{{ $allborrower->member_id }}{{ $i }}"></td>
-                    <td id="{{ $allborrower->book_id }}{{ $i }}"></td>
-                    <td>{{ $allborrower->created_at_borrow }}</td>
-                    <td>{{ $allborrower->return_date }}</td>
-                    <td>
-                        <form action="{{ route('borrowings.destroy',$allborrower->id) }}" method="Post">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('are you sure to delete this?');">Delete</button>
-                        </form>
-                    </td>
+    <div id="loadingoverlay_borrower">
+        <table id="datatable_borrower" class="table table-bordered table-responsive-lg">
+            <thead>
+                <tr>
+                    <th>Member Name</th>
+                    <th>Book Name</th>
+                    <th>Borrow Date</th>
+                    <th>Return Date</th>
+                    <th>Action</th>
                 </tr>
+            </thead>
+            <tbody>
                 @php
-                    $i = $i+1;
+                    $i = 0;
                 @endphp
-            @endforeach
-            @php
-                $i++
-            @endphp
-        </tbody>
-    </table>
+                @foreach ($allborrowers as $allborrower)
+                    <script>
+                        // ajax get membername
+                        var b = "";
+                        var k = "";
+                        var r = "";
+
+                        function getmember() {
+                            $.ajax({
+                                url: "/borrowings/membername/"+{{ $allborrower->member_id }},
+                                dataType: "json",
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                success: function (data) {
+
+                                    $.each(data,function(index,obj)
+                                    {
+                                        b = obj.name;
+                                    });
+
+                                    document.getElementById("" +{{ $allborrower->member_id }}+{{ $i }}+"").innerHTML = "<td>"+ b +"</td>";
+
+                                    return b;
+                                }
+                            });
+                        }
+
+                        function getbook() {
+                            $.ajax({
+                                url: "/borrowings/bookname/"+{{ $allborrower->book_id }},
+                                dataType: "json",
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                success: function (data) {
+
+                                    $.each(data,function(index,obj)
+                                    {
+                                        k = obj.title;
+                                    });
+
+                                    document.getElementById("" +{{ $allborrower->book_id }}+{{ $i }}+"").innerHTML = "<td>"+ k +"</td>";
+
+                                    return k;
+                                }
+                            });
+                        }
+
+                        getbook();
+                        getmember();
+
+                    </script>
+
+                    <tr id="iman">
+                        <td id="{{ $allborrower->member_id }}{{ $i }}"></td>
+                        <td id="{{ $allborrower->book_id }}{{ $i }}"></td>
+                        <td>{{ $allborrower->created_at_borrow }}</td>
+                        <td>{{ $allborrower->return_date }}</td>
+                        <td>
+                            <form action="{{ route('borrowings.destroy',$allborrower->id) }}" method="Post">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('are you sure to delete this?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @php
+                        $i = $i+1;
+                    @endphp
+                @endforeach
+                @php
+                    $i++
+                @endphp
+            </tbody>
+        </table>
+    </div>
     <br>
     <br>
     <br>
@@ -504,95 +524,97 @@
     <hr>
     <h1>Late charge list</h1>
     <br>
-    <table id="datatable_latecharge" class="table table-bordered table-responsive-lg">
-        <thead>
-            <tr>
-                <th>Member Name</th>
-                <th>Book Name</th>
-                <th>Borrow Date</th>
-                <th>Return Date</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $i = 0;
-            @endphp
-            @foreach ($latecharges as $latecharges)
-                <script>
-                    // ajax get membername
-                    var b = "";
-                    var k = "";
-                    var r = "";
-
-                    function getmember() {
-                        $.ajax({
-                            url: "/borrowings/membername/"+{{ $latecharges->member_id }},
-                            dataType: "json",
-                            type: "GET",
-                            contentType: "application/json; charset=utf-8",
-                            success: function (data) {
-
-                                $.each(data,function(index,obj)
-                                {
-                                    b = obj.name;
-                                });
-
-                                document.getElementById("" +{{ $latecharges->member_id }}+{{ $i }}+"").innerHTML = "<td>"+ b +"</td>";
-
-                                return b;
-                            }
-                        });
-                    }
-
-                    function getbook() {
-                        $.ajax({
-                            url: "/borrowings/bookname/"+{{ $latecharges->book_id }},
-                            dataType: "json",
-                            type: "GET",
-                            contentType: "application/json; charset=utf-8",
-                            success: function (data) {
-
-                                $.each(data,function(index,obj)
-                                {
-                                    k = obj.title;
-                                });
-
-                                document.getElementById("" +{{ $latecharges->book_id }}+{{ $i }}+"").innerHTML = "<td>"+ k +"</td>";
-
-                                return k;
-                            }
-                        });
-                    }
-
-                    getbook();
-                    getmember();
-
-                </script>
-
-                <tr id="iman">
-                    <td id="{{ $latecharges->member_id }}{{ $i }}"></td>
-                    <td id="{{ $latecharges->book_id }}{{ $i }}"></td>
-                    <td>{{ $latecharges->created_at_borrow }}</td>
-                    <td>{{ $latecharges->return_date }}</td>
-                    <td>
-                        <form action="{{ route('borrowings.destroy',$latecharges->id) }}" method="Post">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" style="margin: 4px 4px 4px 4px" class="btn btn-danger" onclick="return confirm('are you sure to delete this?');">Delete</button>
-                            <button type="submit" class="btn btn-success" onclick="createNewBookStatus({{ $borrowing->id }}); refreshPage();">Done</button>
-                        </form>
-                    </td>
+    <div id="loadingoverlay_latecharge">
+        <table id="datatable_latecharge" class="table table-bordered table-responsive-lg">
+            <thead>
+                <tr>
+                    <th>Member Name</th>
+                    <th>Book Name</th>
+                    <th>Borrow Date</th>
+                    <th>Return Date</th>
+                    <th>Action</th>
                 </tr>
+            </thead>
+            <tbody>
                 @php
-                    $i = $i+1;
+                    $i = 0;
                 @endphp
-            @endforeach
-            @php
-                $i++
-            @endphp
-        </tbody>
-    </table>
+                @foreach ($latecharges as $latecharges)
+                    <script>
+                        // ajax get membername
+                        var b = "";
+                        var k = "";
+                        var r = "";
+
+                        function getmember() {
+                            $.ajax({
+                                url: "/borrowings/membername/"+{{ $latecharges->member_id }},
+                                dataType: "json",
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                success: function (data) {
+
+                                    $.each(data,function(index,obj)
+                                    {
+                                        b = obj.name;
+                                    });
+
+                                    document.getElementById("" +{{ $latecharges->member_id }}+{{ $i }}+"").innerHTML = "<td>"+ b +"</td>";
+
+                                    return b;
+                                }
+                            });
+                        }
+
+                        function getbook() {
+                            $.ajax({
+                                url: "/borrowings/bookname/"+{{ $latecharges->book_id }},
+                                dataType: "json",
+                                type: "GET",
+                                contentType: "application/json; charset=utf-8",
+                                success: function (data) {
+
+                                    $.each(data,function(index,obj)
+                                    {
+                                        k = obj.title;
+                                    });
+
+                                    document.getElementById("" +{{ $latecharges->book_id }}+{{ $i }}+"").innerHTML = "<td>"+ k +"</td>";
+
+                                    return k;
+                                }
+                            });
+                        }
+
+                        getbook();
+                        getmember();
+
+                    </script>
+
+                    <tr id="iman">
+                        <td id="{{ $latecharges->member_id }}{{ $i }}"></td>
+                        <td id="{{ $latecharges->book_id }}{{ $i }}"></td>
+                        <td>{{ $latecharges->created_at_borrow }}</td>
+                        <td>{{ $latecharges->return_date }}</td>
+                        <td>
+                            <form action="{{ route('borrowings.destroy',$latecharges->id) }}" method="Post">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" style="margin: 4px 4px 4px 4px" class="btn btn-danger" onclick="return confirm('are you sure to delete this?');">Delete</button>
+                                <button type="submit" class="btn btn-success" onclick="createNewBookStatus({{ $borrowing->id }}); refreshPage();">Done</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @php
+                        $i = $i+1;
+                    @endphp
+                @endforeach
+                @php
+                    $i++
+                @endphp
+            </tbody>
+        </table>
+    </div>
     <br>
     <br>
     <br>
